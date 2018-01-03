@@ -1,30 +1,36 @@
-import GoTrue from "gotrue-js";
+import GoTrue from 'gotrue-js';
 import jwtDecode from 'jwt-decode';
-import {List} from 'immutable';
-import { get, pick, intersection } from "lodash";
-import GitHubBackend from "Backends/github/implementation";
-import API from "./API";
-import AuthenticationPage from "./AuthenticationPage";
+import { List } from 'immutable';
+import { get, pick, intersection } from 'lodash';
+import GitHubBackend from 'Backends/github/implementation';
+import API from './API';
+import AuthenticationPage from './AuthenticationPage';
 
 const localHosts = {
   localhost: true,
   '127.0.0.1': true,
-  '0.0.0.0': true
-}
+  '0.0.0.0': true,
+};
 const defaults = {
   identity: '/.netlify/identity',
-  gateway: '/.netlify/git/github'
-}
+  gateway: '/.netlify/git/github',
+};
 
 function getEndpoint(endpoint, netlifySiteURL) {
-  if (localHosts[document.location.host.split(":").shift()] && netlifySiteURL && endpoint.match(/^\/\.netlify\//)) {
+  if (
+    localHosts[document.location.host.split(':').shift()] &&
+    netlifySiteURL &&
+    endpoint.match(/^\/\.netlify\//)
+  ) {
     const parts = [];
     if (netlifySiteURL) {
       parts.push(netlifySiteURL);
-      if (!netlifySiteURL.match(/\/$/)) { parts.push("/"); }
+      if (!netlifySiteURL.match(/\/$/)) {
+        parts.push('/');
+      }
     }
     parts.push(endpoint.replace(/^\//, ''));
-    return parts.join("");
+    return parts.join('');
   }
   return endpoint;
 }
@@ -33,12 +39,22 @@ export default class GitGateway extends GitHubBackend {
   constructor(config) {
     super(config, true);
 
-    this.accept_roles = (config.getIn(["backend", "accept_roles"]) || List()).toArray();
+    this.accept_roles = (
+      config.getIn(['backend', 'accept_roles']) || List()
+    ).toArray();
 
-    const netlifySiteURL = localStorage.getItem("netlifySiteURL");
-    const APIUrl = getEndpoint(config.getIn(["backend", "identity_url"], defaults.identity), netlifySiteURL);
-    this.github_proxy_url = getEndpoint(config.getIn(["backend", "gateway_url"], defaults.gateway), netlifySiteURL);
-    this.authClient = window.netlifyIdentity ? window.netlifyIdentity.gotrue : new GoTrue({APIUrl});
+    const netlifySiteURL = localStorage.getItem('netlifySiteURL');
+    const APIUrl = getEndpoint(
+      config.getIn(['backend', 'identity_url'], defaults.identity),
+      netlifySiteURL
+    );
+    this.github_proxy_url = getEndpoint(
+      config.getIn(['backend', 'gateway_url'], defaults.gateway),
+      netlifySiteURL
+    );
+    this.authClient = window.netlifyIdentity
+      ? window.netlifyIdentity.gotrue
+      : new GoTrue({ APIUrl });
 
     AuthenticationPage.authClient = this.authClient;
   }
@@ -51,8 +67,7 @@ export default class GitGateway extends GitHubBackend {
 
   authenticate(user) {
     this.tokenPromise = user.jwt.bind(user);
-    return this.tokenPromise()
-    .then((token) => {
+    return this.tokenPromise().then(token => {
       let validRole = true;
       if (this.accept_roles && this.accept_roles.length > 0) {
         const userRoles = get(jwtDecode(token), 'app_metadata.roles', []);
@@ -69,11 +84,13 @@ export default class GitGateway extends GitHubBackend {
           api_root: this.github_proxy_url,
           branch: this.branch,
           tokenPromise: this.tokenPromise,
-          commitAuthor: pick(userData, ["name", "email"]),
+          commitAuthor: pick(userData, ['name', 'email']),
         });
         return userData;
       } else {
-        throw new Error("You don't have sufficient permissions to access Netlify CMS");
+        throw new Error(
+          "You don't have sufficient permissions to access Netlify CMS"
+        );
       }
     });
   }
@@ -93,5 +110,4 @@ export default class GitGateway extends GitHubBackend {
   authComponent() {
     return AuthenticationPage;
   }
-
 }

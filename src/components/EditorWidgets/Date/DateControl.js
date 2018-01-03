@@ -10,10 +10,7 @@ export default class DateControl extends React.Component {
     classNameWrapper: PropTypes.string.isRequired,
     setActiveStyle: PropTypes.func.isRequired,
     setInactiveStyle: PropTypes.func.isRequired,
-    value: PropTypes.oneOfType([
-      PropTypes.object,
-      PropTypes.string,
-    ]),
+    value: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
     includeTime: PropTypes.bool,
   };
 
@@ -41,7 +38,13 @@ export default class DateControl extends React.Component {
   };
 
   render() {
-    const { includeTime, value, classNameWrapper, setActiveStyle, setInactiveStyle } = this.props;
+    const {
+      includeTime,
+      value,
+      classNameWrapper,
+      setActiveStyle,
+      setInactiveStyle,
+    } = this.props;
     const format = this.format || moment.defaultFormat;
     return (
       <DateTime

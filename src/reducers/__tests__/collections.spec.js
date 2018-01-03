@@ -4,24 +4,23 @@ import collections from '../collections';
 
 describe('collections', () => {
   it('should handle an empty state', () => {
-    expect(
-      collections(undefined, {})
-    ).toEqual(
-      null
-    );
+    expect(collections(undefined, {})).toEqual(null);
   });
 
   it('should load the collections from the config', () => {
     expect(
-      collections(undefined, configLoaded({
-        collections: [
-          {
-            name: 'posts',
-            folder: '_posts',
-            fields: [{ name: 'title', widget: 'string' }],
-          },
-        ],
-      }))
+      collections(
+        undefined,
+        configLoaded({
+          collections: [
+            {
+              name: 'posts',
+              folder: '_posts',
+              fields: [{ name: 'title', widget: 'string' }],
+            },
+          ],
+        })
+      )
     ).toEqual(
       OrderedMap({
         posts: fromJS({

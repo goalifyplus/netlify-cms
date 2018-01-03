@@ -18,31 +18,35 @@ const parsers = {
   },
   yaml: {
     parse: input => yamlFormatter.fromFile(input),
-    stringify: (metadata, { sortedKeys }) => yamlFormatter.toFile(metadata, sortedKeys),
+    stringify: (metadata, { sortedKeys }) =>
+      yamlFormatter.toFile(metadata, sortedKeys),
   },
-}
+};
 
 function inferFrontmatterFormat(str) {
   const firstLine = str.substr(0, str.indexOf('\n')).trim();
-  if ((firstLine.length > 3) && (firstLine.substr(0, 3) === "---")) {
+  if (firstLine.length > 3 && firstLine.substr(0, 3) === '---') {
     // No need to infer, `gray-matter` will handle things like `---toml` for us.
     return;
   }
   switch (firstLine) {
-    case "---":
-      return { language: "yaml", delimiters: "---" };
-    case "+++":
-      return { language: "toml", delimiters: "+++" };
-    case "{":
-      return { language: "json", delimiters: ["{", "}"] };
+    case '---':
+      return { language: 'yaml', delimiters: '---' };
+    case '+++':
+      return { language: 'toml', delimiters: '+++' };
+    case '{':
+      return { language: 'json', delimiters: ['{', '}'] };
     default:
-      throw "Unrecognized front-matter format.";
+      throw 'Unrecognized front-matter format.';
   }
 }
 
 export default {
   fromFile(content) {
-    const result = matter(content, { engines: parsers, ...inferFrontmatterFormat(content) });
+    const result = matter(content, {
+      engines: parsers,
+      ...inferFrontmatterFormat(content),
+    });
     return {
       ...result.data,
       body: result.content,
@@ -54,6 +58,11 @@ export default {
 
     // always stringify to YAML
     // `sortedKeys` is not recognized by gray-matter, so it gets passed through to the parser
-    return matter.stringify(body, meta, { engines: parsers, language: "yaml", delimiters: "---", sortedKeys });
-  }
-}
+    return matter.stringify(body, meta, {
+      engines: parsers,
+      language: 'yaml',
+      delimiters: '---',
+      sortedKeys,
+    });
+  },
+};

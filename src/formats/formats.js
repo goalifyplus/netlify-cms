@@ -3,21 +3,16 @@ import tomlFormatter from './toml';
 import jsonFormatter from './json';
 import FrontmatterFormatter from './frontmatter';
 
-export const supportedFormats = [
-  'yml',
-  'yaml',
-  'toml',
-  'json',
-  'frontmatter',
-];
+export const supportedFormats = ['yml', 'yaml', 'toml', 'json', 'frontmatter'];
 
-export const formatToExtension = format => ({
-  yml: 'yml',
-  yaml: 'yml',
-  toml: 'toml',
-  json: 'json',
-  frontmatter: 'md',
-}[format]);
+export const formatToExtension = format =>
+  ({
+    yml: 'yml',
+    yaml: 'yml',
+    toml: 'toml',
+    json: 'json',
+    frontmatter: 'md',
+  }[format]);
 
 export function formatByExtension(extension) {
   return {

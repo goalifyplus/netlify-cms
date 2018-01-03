@@ -4,12 +4,20 @@ import ImmutablePropTypes from 'react-immutable-proptypes';
 import { List, Map } from 'immutable';
 import { partial } from 'lodash';
 import c from 'classnames';
-import { SortableContainer, SortableElement, SortableHandle } from 'react-sortable-hoc';
+import {
+  SortableContainer,
+  SortableElement,
+  SortableHandle,
+} from 'react-sortable-hoc';
 import { Icon, ListItemTopBar } from 'UI';
 import ObjectControl from 'EditorWidgets/Object/ObjectControl';
 
 function ListItem(props) {
-  return <div {...props} className={`list-item ${ props.className || '' }`}>{props.children}</div>;
+  return (
+    <div {...props} className={`list-item ${props.className || ''}`}>
+      {props.children}
+    </div>
+  );
 }
 ListItem.propTypes = {
   className: PropTypes.string,
@@ -23,11 +31,24 @@ function valueToString(value) {
 
 const SortableListItem = SortableElement(ListItem);
 
-const TopBar = ({ onAdd, listLabel, onCollapseAllToggle, allItemsCollapsed, itemsCount }) => (
+const TopBar = ({
+  onAdd,
+  listLabel,
+  onCollapseAllToggle,
+  allItemsCollapsed,
+  itemsCount,
+}) => (
   <div className="nc-listControl-topBar">
     <div className="nc-listControl-listCollapseToggle">
-      <button className="nc-listControl-listCollapseToggleButton" onClick={onCollapseAllToggle}>
-        <Icon type="chevron" direction={allItemsCollapsed ? 'up' : 'down'} size="small" />
+      <button
+        className="nc-listControl-listCollapseToggleButton"
+        onClick={onCollapseAllToggle}
+      >
+        <Icon
+          type="chevron"
+          direction={allItemsCollapsed ? 'up' : 'down'}
+          size="small"
+        />
       </button>
       {itemsCount} {listLabel}
     </div>
@@ -111,7 +132,7 @@ export default class ListControl extends Component {
     }
   }
 
-  handleChange = (e) => {
+  handleChange = e => {
     const { onChange } = this.props;
     const oldValue = this.state.value;
     const newValue = e.target.value;
@@ -127,18 +148,21 @@ export default class ListControl extends Component {
 
   handleFocus = () => {
     this.props.setActiveStyle();
-  }
+  };
 
-  handleBlur = (e) => {
-    const listValue = e.target.value.split(',').map(el => el.trim()).filter(el => el);
+  handleBlur = e => {
+    const listValue = e.target.value
+      .split(',')
+      .map(el => el.trim())
+      .filter(el => el);
     this.setState({ value: valueToString(listValue) });
     this.props.setInactiveStyle();
   };
 
-  handleAdd = (e) => {
+  handleAdd = e => {
     e.preventDefault();
     const { value, onChange } = this.props;
-    const parsedValue = (this.valueType === valueTypes.SINGLE) ? null : Map();
+    const parsedValue = this.valueType === valueTypes.SINGLE ? null : Map();
     this.setState({ itemsCollapsed: this.state.itemsCollapsed.push(false) });
     onChange((value || List()).push(parsedValue));
   };
@@ -153,10 +177,19 @@ export default class ListControl extends Component {
   handleChangeFor(index) {
     return (fieldName, newValue, newMetadata) => {
       const { value, metadata, onChange, forID } = this.props;
-      const newObjectValue = this.getObjectValue(index).set(fieldName, newValue);
-      const parsedValue = (this.valueType === valueTypes.SINGLE) ? newObjectValue.first() : newObjectValue;
+      const newObjectValue = this.getObjectValue(index).set(
+        fieldName,
+        newValue
+      );
+      const parsedValue =
+        this.valueType === valueTypes.SINGLE
+          ? newObjectValue.first()
+          : newObjectValue;
       const parsedMetadata = {
-        [forID]: Object.assign(metadata ? metadata.toJS() : {}, newMetadata ? newMetadata[forID] : {}),
+        [forID]: Object.assign(
+          metadata ? metadata.toJS() : {},
+          newMetadata ? newMetadata[forID] : {}
+        ),
       };
       onChange(value.set(index, parsedValue), parsedMetadata);
     };
@@ -166,35 +199,41 @@ export default class ListControl extends Component {
     event.preventDefault();
     const { itemsCollapsed } = this.state;
     const { value, metadata, onChange, forID } = this.props;
-    const parsedMetadata = metadata && { [forID]: metadata.removeIn(value.get(index).valueSeq()) };
+    const parsedMetadata = metadata && {
+      [forID]: metadata.removeIn(value.get(index).valueSeq()),
+    };
 
     this.setState({ itemsCollapsed: itemsCollapsed.delete(index) });
 
     onChange(value.remove(index), parsedMetadata);
-  }
+  };
 
   handleItemCollapseToggle = (index, event) => {
     event.preventDefault();
     const { itemsCollapsed } = this.state;
     const collapsed = itemsCollapsed.get(index);
     this.setState({ itemsCollapsed: itemsCollapsed.set(index, !collapsed) });
-  }
+  };
 
-  handleCollapseAllToggle = (e) => {
+  handleCollapseAllToggle = e => {
     e.preventDefault();
     const { value } = this.props;
     const { itemsCollapsed } = this.state;
     const allItemsCollapsed = itemsCollapsed.every(val => val === true);
-    this.setState({ itemsCollapsed: List(Array(value.size).fill(!allItemsCollapsed)) });
-  }
+    this.setState({
+      itemsCollapsed: List(Array(value.size).fill(!allItemsCollapsed)),
+    });
+  };
 
   objectLabel(item) {
     const { field } = this.props;
     const multiFields = field.get('fields');
     const singleField = field.get('field');
     const labelField = (multiFields && multiFields.first()) || singleField;
-    const value = multiFields ? item.get(multiFields.first().get('name')) : singleField.get('label');
-    return value || `No ${ labelField.get('name') }`;
+    const value = multiFields
+      ? item.get(multiFields.first().get('name'))
+      : singleField.get('label');
+    return value || `No ${labelField.get('name')}`;
   }
 
   onSortEnd = ({ oldIndex, newIndex }) => {
@@ -208,7 +247,9 @@ export default class ListControl extends Component {
 
     // Update collapsing
     const collapsed = itemsCollapsed.get(oldIndex);
-    const updatedItemsCollapsed = itemsCollapsed.delete(oldIndex).insert(newIndex, collapsed);
+    const updatedItemsCollapsed = itemsCollapsed
+      .delete(oldIndex)
+      .insert(newIndex, collapsed);
     this.setState({ itemsCollapsed: updatedItemsCollapsed });
   };
 
@@ -224,30 +265,41 @@ export default class ListControl extends Component {
     } = this.props;
     const { itemsCollapsed } = this.state;
     const collapsed = itemsCollapsed.get(index);
-    const classNames = ['nc-listControl-item', collapsed ? 'nc-listControl-collapsed' : ''];
+    const classNames = [
+      'nc-listControl-item',
+      collapsed ? 'nc-listControl-collapsed' : '',
+    ];
 
-    return (<SortableListItem className={classNames.join(' ')} index={index} key={`item-${ index }`}>
-      <ListItemTopBar
-        className="nc-listControl-itemTopBar"
-        collapsed={collapsed}
-        onCollapseToggle={partial(this.handleItemCollapseToggle, index)}
-        onRemove={partial(this.handleRemove, index)}
-        dragHandleHOC={SortableHandle}
-      />
-      <div className="nc-listControl-objectLabel">{this.objectLabel(item)}</div>
-      <ObjectControl
-        value={item}
-        field={field}
-        onChangeObject={this.handleChangeFor(index)}
-        getAsset={getAsset}
-        onOpenMediaLibrary={onOpenMediaLibrary}
-        mediaPaths={mediaPaths}
-        onAddAsset={onAddAsset}
-        onRemoveInsertedMedia={onRemoveInsertedMedia}
-        classNameWrapper={`${classNameWrapper} nc-listControl-objectControl`}
-        forList
-      />
-    </SortableListItem>);
+    return (
+      <SortableListItem
+        className={classNames.join(' ')}
+        index={index}
+        key={`item-${index}`}
+      >
+        <ListItemTopBar
+          className="nc-listControl-itemTopBar"
+          collapsed={collapsed}
+          onCollapseToggle={partial(this.handleItemCollapseToggle, index)}
+          onRemove={partial(this.handleRemove, index)}
+          dragHandleHOC={SortableHandle}
+        />
+        <div className="nc-listControl-objectLabel">
+          {this.objectLabel(item)}
+        </div>
+        <ObjectControl
+          value={item}
+          field={field}
+          onChangeObject={this.handleChangeFor(index)}
+          getAsset={getAsset}
+          onOpenMediaLibrary={onOpenMediaLibrary}
+          mediaPaths={mediaPaths}
+          onAddAsset={onAddAsset}
+          onRemoveInsertedMedia={onRemoveInsertedMedia}
+          classNameWrapper={`${classNameWrapper} nc-listControl-objectControl`}
+          forList
+        />
+      </SortableListItem>
+    );
   };
 
   renderListControl() {
@@ -283,14 +335,16 @@ export default class ListControl extends Component {
       return this.renderListControl();
     }
 
-    return (<input
-      type="text"
-      id={forID}
-      value={value}
-      onChange={this.handleChange}
-      onFocus={this.handleFocus}
-      onBlur={this.handleBlur}
-      className={classNameWrapper}
-    />);
+    return (
+      <input
+        type="text"
+        id={forID}
+        value={value}
+        onChange={this.handleChange}
+        onFocus={this.handleFocus}
+        onBlur={this.handleBlur}
+        className={classNameWrapper}
+      />
+    );
   }
-};
+}

@@ -5,5 +5,5 @@ export default {
 
   toFile(data) {
     return JSON.stringify(data);
-  }
-}
+  },
+};

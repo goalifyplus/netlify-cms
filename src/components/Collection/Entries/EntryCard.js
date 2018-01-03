@@ -16,10 +16,12 @@ const EntryCard = ({
 }) => {
   const label = entry.get('label');
   const title = label || entry.getIn(['data', inferedFields.titleField]);
-  const path = `/collections/${collection.get('name')}/entries/${entry.get('slug')}`;
+  const path = `/collections/${collection.get('name')}/entries/${entry.get(
+    'slug'
+  )}`;
   let image = entry.getIn(['data', inferedFields.imageField]);
   image = resolvePath(image, publicFolder);
-  if(image) {
+  if (image) {
     image = encodeURI(image);
   }
 
@@ -34,20 +36,22 @@ const EntryCard = ({
   if (viewStyle === VIEW_STYLE_GRID) {
     return (
       <Link to={path} className="nc-entryListing-gridCard">
-        <div className={c('nc-entryListing-cardBody', { 'nc-entryListing-cardBody-full': !image })}>
+        <div
+          className={c('nc-entryListing-cardBody', {
+            'nc-entryListing-cardBody-full': !image,
+          })}
+        >
           <h2 className="nc-entryListing-cardHeading">{title}</h2>
         </div>
-        {
-          image
-            ? <div
-                className="nc-entryListing-cardImage"
-                style={{ backgroundImage: `url(${ image })` }}
-              />
-            : null
-        }
+        {image ? (
+          <div
+            className="nc-entryListing-cardImage"
+            style={{ backgroundImage: `url(${image})` }}
+          />
+        ) : null}
       </Link>
     );
   }
-}
+};
 
 export default EntryCard;
