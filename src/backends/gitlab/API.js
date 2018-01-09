@@ -5,8 +5,7 @@ import AssetProxy from "ValueObjects/AssetProxy";
 import { APIError } from "ValueObjects/errors";
 
 export default class API {
-  constructor(config, reAuth) {
-    this.reAuth = reAuth;
+  constructor(config) {
     this.api_root = config.api_root || "https://gitlab.com/api/v4";
     this.token = config.token || false;
     this.branch = config.branch || "master";
@@ -18,31 +17,17 @@ export default class API {
     return this.request("/user");
   }
 
-  isGroupProject() {
-    return this.request(this.repoURL)
-      .then(({ namespace }) => (namespace.kind === "group" ? `/groups/${ encodeURIComponent(namespace.full_path) }` : false));
-  }
-
   hasWriteAccess(user) {
     const WRITE_ACCESS = 30;
-    return this.isGroupProject().then((group) => {
-      if (group === false) {
-        return this.request(`${ this.repoURL }/members/${ user.id }`);
-      } else {
-        return this.request(`${ group }/members/${ user.id }`);
+    return this.request(this.repoURL).then(({ permissions }) => {
+      const { project_access, group_access } = permissions;
+      if (project_access && (project_access.access_level >= WRITE_ACCESS)) {
+        return true;
       }
-    })
-    .then(member => (member.access_level >= WRITE_ACCESS))
-    .catch((err) => {
-        // Member does not have any access. We cannot just check for 404,
-        //   because a 404 is also returned if we have the wrong URI,
-        //   just with an "error" key instead of a "message" key.
-        if (err.status === 404 && err.meta.errorValue["message"] === "404 Not found") {
-          return false;
-        } else {
-          // Otherwise, it is actually an API error.
-          throw err;
-        }
+      if (group_access && (group_access.access_level >= WRITE_ACCESS)) {
+        return true;
+      }
+      return false;
     });
   }
 
@@ -79,7 +64,6 @@ export default class API {
     .catch(err => Promise.reject([err, null]))
     .then(([response, value]) => (response.ok ? value : Promise.reject([value, response])))
     .catch(([errorValue, response]) => {
-      if (response.status === 401) { this.reAuth(); }
       const errorMessageProp = (errorValue && errorValue.message) ? errorValue.message : null;
       const message = errorMessageProp || (isString(errorValue) ? errorValue : "");
       throw new APIError(message, response && response.status, 'GitLab', { response, errorValue });
@@ -130,27 +114,16 @@ export default class API {
     .then(files => files.filter(file => file.type === "blob"));
   }
 
-  persistFiles(entry, mediaFiles, options) {
-    const newMedia = mediaFiles.filter(file => !file.uploaded);
-    const mediaUploads = newMedia.map(file => this.fileExists(file.path).then(exists => {
+  persistFiles(files, options) {
+    const uploads = files.map(async file => {
+      const exists = await this.fileExists(file.path);
       return this.uploadAndCommit(file, {
         commitMessage: options.commitMessage,
-        newFile: !exists
+        newFile: !exists,
       });
-    }));
-    
-    // Wait until media files are uploaded before we commit the main entry.
-    //   This should help avoid inconsistent repository/website state.
-    return Promise.all(mediaUploads)
-    .then(mediaResponse => {
-      if (entry) {
-        return this.uploadAndCommit(entry, {
-          commitMessage: options.commitMessage,
-          newFile: options.newEntry
-        });
-      }
-      return mediaUploads;
     });
+
+    return Promise.all(uploads)
   }
 
   deleteFile(path, commit_message, options={}) {

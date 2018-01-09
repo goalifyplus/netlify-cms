@@ -11,7 +11,7 @@ import { currentBackend } from 'Backends/backend';
 import { showCollection, createNewEntry } from 'Actions/collections';
 import { openMediaLibrary as actionOpenMediaLibrary } from 'Actions/mediaLibrary';
 import MediaLibrary from 'MediaLibrary/MediaLibrary';
-import { Loader, Modal, Toast } from 'UI';
+import { Loader, Toast } from 'UI';
 import { getCollectionUrl, getNewEntryUrl } from 'Lib/urlHelper';
 import { SIMPLE, EDITORIAL_WORKFLOW } from 'Constants/publishModes';
 import Collection from 'Collection/Collection';
@@ -44,7 +44,6 @@ class App extends React.Component {
     isFetching: PropTypes.bool.isRequired,
     publishMode: PropTypes.oneOf([SIMPLE, EDITORIAL_WORKFLOW]),
     siteId: PropTypes.string,
-    authModalOpen: PropTypes.bool.isRequired,
   };
 
   static configError(config) {
@@ -75,7 +74,7 @@ class App extends React.Component {
     }
 
     return (
-      <div className="nc-auth-wrapper">
+      <div>
         <Notifs CustomComponent={Toast} />
         {
           React.createElement(backend.authComponent(), {
@@ -104,7 +103,6 @@ class App extends React.Component {
       isFetching,
       publishMode,
       openMediaLibrary,
-      authModalOpen,
     } = this.props;
 
 
@@ -120,12 +118,8 @@ class App extends React.Component {
       return <Loader active>Loading configuration...</Loader>;
     }
 
-    if (user == null && !authModalOpen) {
-      return (
-        <div className="nc-auth-page">
-          {this.authenticating()}
-        </div>
-      );
+    if (user == null) {
+      return this.authenticating();
     }
 
     const defaultPath = `/collections/${collections.first().get('name')}`;
@@ -134,7 +128,6 @@ class App extends React.Component {
     return (
       <div className="nc-app-container">
         <Notifs CustomComponent={Toast} />
-        <Modal isOpen={authModalOpen} className="nc-auth-modal">{this.authenticating()}</Modal>
         <Header
           user={user}
           collections={collections}
@@ -167,11 +160,10 @@ class App extends React.Component {
 
 function mapStateToProps(state, ownProps) {
   const { auth, config, collections, globalUI } = state;
-  const user = auth.get('user', null);
-  const authModalOpen = auth.get('modal', false);
+  const user = auth && auth.get('user');
   const isFetching = globalUI.get('isFetching');
   const publishMode = config && config.get('publish_mode');
-  return { auth, config, collections, user, isFetching, publishMode, authModalOpen };
+  return { auth, config, collections, user, isFetching, publishMode };
 }
 
 function mapDispatchToProps(dispatch) {

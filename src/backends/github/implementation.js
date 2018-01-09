@@ -1,10 +1,19 @@
 import trimStart from 'lodash/trimStart';
 import semaphore from "semaphore";
 import { fileExtension } from 'Lib/pathHelper'
+import { SIMPLE, EDITORIAL_WORKFLOW } from "Constants/publishModes";
 import AuthenticationPage from "./AuthenticationPage";
 import API from "./API";
 
 const MAX_CONCURRENT_DOWNLOADS = 10;
+
+function isSimpleWorkflow (mode) {
+  return !mode || mode === SIMPLE;
+}
+
+function isEditorialWorkflow (mode) {
+  return mode === EDITORIAL_WORKFLOW;
+}
 
 export default class GitHub {
   constructor(config, proxied = false) {
@@ -102,8 +111,16 @@ export default class GitHub {
       }));
   }
 
-  persistEntry(entry, mediaFiles = [], options = {}) {
-    return this.api.persistFiles(entry, mediaFiles, options);
+  async persistEntry(entry, options = {}) {
+    const fileTree = await this.api.persistFiles([entry]);
+
+    if (isSimpleWorkflow(options.mode)) {
+      return this.api.simpleGit(fileTree, options);
+    }
+
+    if (isEditorialWorkflow(options.mode)) {
+      return this.api.editorialWorkflowGit(fileTree, entry, options);
+    }
   }
 
   /**
@@ -132,17 +149,12 @@ export default class GitHub {
   }
 
   async persistMedia(mediaFile, options = {}) {
-    try {
-      const response = await this.api.persistFiles(null, [mediaFile], options);
-      const repo = this.repo || this.getRepoFromResponseUrl(response.url);
-      const { value, size, path, fileObj } = mediaFile;
-      const url = `https://raw.githubusercontent.com/${repo}/${this.branch}${path}`;
-      return { id: response.sha, name: value, size: fileObj.size, url, path: trimStart(path, '/') };
-    }
-    catch(error) {
-      console.error(error);
-      throw error;
-    }
+    const fileTree = await this.api.persistFiles([mediaFile]);
+    const ref = await this.api.simpleGit(fileTree, options);
+    const repo = this.repo || this.getRepoFromResponseUrl(ref.url);
+    const { value, size, path, fileObj } = mediaFile;
+    const url = `https://raw.githubusercontent.com/${repo}/${this.branch}${path}`;
+    return { id: ref.sha, name: value, size: fileObj.size, url, path: trimStart(path, '/') };
   }
 
   deleteFile(path, commitMessage, options) {

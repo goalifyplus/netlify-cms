@@ -22,7 +22,6 @@ import {
 
 const initialState = Map({
   entry: Map(),
-  mediaFiles: List(),
   fieldsMetaData: Map(),
   fieldsErrors: Map(),
   hasChanged: false,
@@ -35,7 +34,6 @@ const entryDraftReducer = (state = Map(), action) => {
       return state.withMutations((state) => {
         state.set('entry', action.payload);
         state.setIn(['entry', 'newRecord'], false);
-        state.set('mediaFiles', List());
         state.set('fieldsMetaData', Map());
         state.set('fieldsErrors', Map());
         state.set('hasChanged', false);
@@ -45,7 +43,6 @@ const entryDraftReducer = (state = Map(), action) => {
       return state.withMutations((state) => {
         state.set('entry', fromJS(action.payload));
         state.setIn(['entry', 'newRecord'], true);
-        state.set('mediaFiles', List());
         state.set('fieldsMetaData', Map());
         state.set('fieldsErrors', Map());
         state.set('hasChanged', false);
@@ -91,15 +88,6 @@ const entryDraftReducer = (state = Map(), action) => {
         state.deleteIn(['entry', 'isPersisting']);
         state.set('hasChanged', false);
       });
-
-    case ADD_ASSET:
-      if (state.has('mediaFiles')) {
-        return state.update('mediaFiles', list => list.push(action.payload.public_path));
-      }
-      return state;
-
-    case REMOVE_ASSET:
-      return state.update('mediaFiles', list => list.filterNot(path => path === action.payload));
 
     default:
       return state;

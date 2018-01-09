@@ -29,13 +29,13 @@ export default class GitLab {
     return AuthenticationPage;
   }
 
-  restoreUser(user, reAuth) {
-    return this.authenticate(user, reAuth);
+  restoreUser(user) {
+    return this.authenticate(user);
   }
 
-  authenticate(state, reAuth) {
+  authenticate(state) {
     this.token = state.token;
-    this.api = new API({ token: this.token, branch: this.branch, repo: this.repo, api_root: this.api_root }, reAuth);
+    this.api = new API({ token: this.token, branch: this.branch, repo: this.repo, api_root: this.api_root });
     return this.api.user().then(user =>
       this.api.hasWriteAccess(user).then((isCollab) => {
         // Unauthorized user
@@ -106,21 +106,15 @@ export default class GitLab {
   }
 
 
-  persistEntry(entry, mediaFiles = [], options = {}) {
-    return this.api.persistFiles(entry, mediaFiles, options);
+  async persistEntry(entry, options = {}) {
+    return this.api.persistFiles([entry], options);
   }
 
   async persistMedia(mediaFile, options = {}) {
-    try {
-      const response = await this.api.persistFiles(null, [mediaFile], options);
-      const { value, size, path, fileObj } = mediaFile;
-      const url = this.api.fileDownloadURL(path);
-      return { name: value, size: fileObj.size, url, path: trimStart(path, '/') };
-    }
-    catch (error) {
-      console.error(error);
-      throw error;
-    }
+    await this.api.persistFiles([mediaFile], options);
+    const { value, size, path, fileObj } = mediaFile;
+    const url = this.api.fileDownloadURL(path);
+    return { name: value, size: fileObj.size, url, path: trimStart(path, '/') };
   }
 
   deleteFile(path, commitMessage, options) {
