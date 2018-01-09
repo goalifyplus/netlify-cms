@@ -4,7 +4,7 @@ position: 35
 ---
 # Custom Widgets
 
-The NetlifyCMS exposes an `window.CMS` global object that you can use to register custom widgets, previews, and editor plugins. The available widget extension methods are:
+The NetlifyCMS exposes a `window.CMS` global object that you can use to register custom widgets, previews, and editor plugins. The available widget extension methods are:
 
 * **registerWidget:** lets you register a custom widget.
 * **registerEditorComponent:** lets you add a block component to the Markdown editor.
@@ -25,11 +25,11 @@ CMS.registerWidget(name, control, \[preview\])
 
 **Params:**
 
-| Param       | Type                      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| ----------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | string                    | Widget name, allows this widget to be used via the field `widget` property in config                                                                                                                                                                                                                                                                                                                                                                                        |
-| `control`   | React.Component | string  | <ul><li>React component that renders the control, receives the following props: <ul><li>**value:** Current field value</li><li>**onChange:** Callback function to update the field value</li></ul></li><li>Name of a registered widget whose control should be used (includes built in widgets).</li></ul>                                                                                                                                                                  |
-| [`preview`] | React.Component, optional | Renders the widget preview, receives the following props: <ul><li>**value:** Current preview value</li><li>**field:** Immutable map of current field configuration</li><li>**metadata:** Immutable map of any available metadata for the current field</li><li>**getAsset:** Function for retrieving an asset url for image/file fields</li><li>**entry:** Immutable Map of all entry data</li><li>**fieldsMetaData:** Immutable map of metadata from all fields.</li></ul> |
+| Param       | Type                      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |                                                                                                                                                                                                                                                                                                            |
+| ----------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | string                    | Widget name, allows this widget to be used via the field `widget` property in config                                                                                                                                                                                                                                                                                                                                                                                        |                                                                                                                                                                                                                                                                                                            |
+| `control`   | React.Component           | string                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | <ul><li>React component that renders the control, receives the following props: <ul><li>**value:** Current field value</li><li>**onChange:** Callback function to update the field value</li></ul></li><li>Name of a registered widget whose control should be used (includes built in widgets).</li></ul> |
+| [`preview`] | React.Component, optional | Renders the widget preview, receives the following props: <ul><li>**value:** Current preview value</li><li>**field:** Immutable map of current field configuration</li><li>**metadata:** Immutable map of any available metadata for the current field</li><li>**getAsset:** Function for retrieving an asset url for image/file fields</li><li>**entry:** Immutable Map of all entry data</li><li>**fieldsMetaData:** Immutable map of metadata from all fields.</li></ul> |                                                                                                                                                                                                                                                                                                            |
 
 * **field:** The field type that this widget will be used for.
 * **control:** A React component that renders the editing interface for this field. Two props will be passed:
@@ -92,7 +92,7 @@ CMS.registerEditorComponent({
   // Fields the user need to fill out when adding an instance of the component
   fields: [{name: 'id', label: 'Youtube Video ID', widget: 'string'}],
   // Pattern to identify a block as being an instance of this component
-  pattern: /youtube (\S+)\s/,
+  pattern: /^youtube (\S+)$/,
   // Function to extract data elements from the regexp match
   fromBlock: function(match) {
     return {
@@ -116,7 +116,7 @@ CMS.registerEditorComponent({
 
 **Result:**
 
-![youtube-widget](/img/youtube-widget.png)
+![youtube-widget](/img/screen shot 2018-01-05 at 4.25.07 pm.png)
 
 ## Advanced field validation
 
