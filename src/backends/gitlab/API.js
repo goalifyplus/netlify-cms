@@ -49,6 +49,9 @@ export default class API {
 
   request(path, options = {}) {
     const headers = this.requestHeaders(options.headers || {});
+    options.params = options.params || {};
+    // FIXME: I temporarily set per_page to all of record. we need to implement pagination.
+    options.params.per_page = 10000;
     const url = this.urlFor(path, options);
     return fetch(url, { ...options, headers })
     .then((response) => {
@@ -69,12 +72,12 @@ export default class API {
       throw new APIError(message, response && response.status, 'GitLab', { response, errorValue });
     });
   }
-  
+
   readFile(path, sha, branch = this.branch) {
     const cache = sha ? LocalForage.getItem(`gh.${ sha }`) : Promise.resolve(null);
     return cache.then((cached) => {
       if (cached) { return cached; }
-      
+
       return this.request(`${ this.repoURL }/repository/files/${ encodeURIComponent(path) }/raw`, {
         params: { ref: branch },
         cache: "no-store",
@@ -93,13 +96,13 @@ export default class API {
         params: { ref: branch },
       });
   }
-  
+
   fileExists(path, branch = this.branch) {
     return this.request(`${ this.repoURL }/repository/files/${ encodeURIComponent(path) }`, {
       method: "HEAD",
       params: { ref: branch },
       cache: "no-store",
-    }).then(() => true).catch(err => 
+    }).then(() => true).catch(err =>
       // 404 can mean either the file does not exist, or if an API
       //   endpoint doesn't exist. We can't check this becaue we are
       //   not getting the content with a HEAD request.
@@ -146,7 +149,7 @@ export default class API {
     const content = item instanceof AssetProxy ? item.toBase64() : this.toBase64(item.raw);
     // Remove leading slash from path if exists.
     const file_path = item.path.replace(/^\//, '');
-    
+
     // We cannot use the `/repository/files/:file_path` format here because the file content has to go
     //   in the URI as a parameter. This overloads the OPTIONS pre-request (at least in Chrome 61 beta).
     return content.then(contentBase64 => this.request(`${ this.repoURL }/repository/commits`, {
